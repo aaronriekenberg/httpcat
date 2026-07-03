@@ -5,7 +5,7 @@ A minimal command-line HTTP client written in Go, supporting HTTP/1.1, HTTP/2, a
 ## Install
 
 ```sh
-go install github.com/aaronriekenberg/httpcat/cmd/httpcat@latest
+go install github.com/aaronriekenberg/httpcat@latest
 ```
 
 Or build from source:
@@ -13,7 +13,7 @@ Or build from source:
 ```sh
 git clone https://github.com/aaronriekenberg/httpcat
 cd httpcat
-go build -o httpcat ./cmd/httpcat
+go build -o httpcat .
 ```
 
 ## Usage
@@ -34,6 +34,7 @@ Only `http://` and `https://` URLs are supported.
 | `-k`, `--insecure` | Skip TLS certificate verification |
 | `-v`, `--verbose` | Print request and response headers to stderr |
 | `-X`, `--request <method>` | HTTP method to use (default: `GET`) |
+| `-V`, `--version` | Print version information and exit |
 | `-h`, `--help` | Show help |
 
 ## Examples
@@ -99,12 +100,24 @@ Bundle short flags:
 httpcat -kv https://localhost:8443/
 ```
 
+Print version:
+
+```sh
+httpcat --version
+httpcat -V
+```
+
+```
+httpcat v1.0.0 (commit abc1234, built 2026-07-03T12:00:00Z)
+```
+
 ## HTTP version selection
 
 | Condition | Protocol used |
 |-----------|---------------|
 | Default | HTTP/1.1 or HTTP/2 via ALPN negotiation (`net/http`) |
-| `--http2-prior-knowledge` | HTTP/2 directly, no upgrade (`golang.org/x/net/http2`) |
+| `--http2-prior-knowledge` + `http://` | Unencrypted HTTP/2 (h2c) directly over TCP (`net/http`) |
+| `--http2-prior-knowledge` + `https://` | HTTP/2 over TLS, no HTTP/1.1 upgrade (`net/http`) |
 | `--http3` | HTTP/3 via QUIC; falls back if server unreachable over QUIC |
 | `--http3-only` | HTTP/3 via QUIC; exits non-zero on failure |
 

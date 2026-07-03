@@ -25,6 +25,9 @@ type Options struct {
 	// Request
 	Method string // -X, --request: HTTP method (default: GET)
 
+	// Meta
+	Version bool // -V, --version: print version and exit
+
 	// Positional
 	URL string
 }
@@ -44,6 +47,7 @@ var flagDefs = []flag{
 	{long: "insecure", short: "k", takesArg: false, helpText: "Skip TLS certificate verification"},
 	{long: "verbose", short: "v", takesArg: false, helpText: "Print request and response headers to stderr"},
 	{long: "request", short: "X", takesArg: true, helpText: "HTTP method to use (default: GET)"},
+	{long: "version", short: "V", takesArg: false, helpText: "Print version information and exit"},
 }
 
 // Parse parses os.Args[1:] into Options.
@@ -136,6 +140,9 @@ func Parse(args []string) (*Options, error) {
 	}
 
 	if opts.URL == "" {
+		if opts.Version {
+			return opts, nil
+		}
 		return nil, errors.New("no URL provided")
 	}
 
@@ -149,7 +156,7 @@ func Parse(args []string) (*Options, error) {
 		opts.HTTP3 = true
 	}
 
-	if !strings.HasPrefix(opts.URL, "http://") && !strings.HasPrefix(opts.URL, "https://") {
+	if !opts.Version && !strings.HasPrefix(opts.URL, "http://") && !strings.HasPrefix(opts.URL, "https://") {
 		return nil, fmt.Errorf("unsupported scheme in URL %q (only http and https are supported)", opts.URL)
 	}
 
@@ -170,6 +177,8 @@ func applyFlag(opts *Options, long, val string) error {
 		opts.Verbose = true
 	case "request":
 		opts.Method = strings.ToUpper(val)
+	case "version":
+		opts.Version = true
 	default:
 		return fmt.Errorf("unhandled flag: %s", long)
 	}

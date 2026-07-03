@@ -291,3 +291,43 @@ func TestFlagsBeforeAndAfterURL(t *testing.T) {
 		t.Error("expected Verbose=true")
 	}
 }
+
+// ---------------------------------------------------------------------------
+// --version / -V
+// ---------------------------------------------------------------------------
+
+func TestVersionLong(t *testing.T) {
+	opts := parseOK(t, "--version")
+	if !opts.Version {
+		t.Error("expected Version=true")
+	}
+}
+
+func TestVersionShort(t *testing.T) {
+	opts := parseOK(t, "-V")
+	if !opts.Version {
+		t.Error("expected Version=true")
+	}
+}
+
+// --version needs no URL.
+func TestVersionNoURLRequired(t *testing.T) {
+	opts, err := cli.Parse([]string{"--version"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !opts.Version {
+		t.Error("expected Version=true")
+	}
+	if opts.URL != "" {
+		t.Errorf("expected empty URL, got %q", opts.URL)
+	}
+}
+
+// --version alongside a URL is also fine.
+func TestVersionWithURL(t *testing.T) {
+	opts := parseOK(t, "--version", "https://example.com")
+	if !opts.Version {
+		t.Error("expected Version=true")
+	}
+}

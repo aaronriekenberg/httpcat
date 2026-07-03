@@ -6,6 +6,7 @@ import (
 
 	"github.com/aaronriekenberg/httpcat/internal/cli"
 	"github.com/aaronriekenberg/httpcat/internal/client"
+	"github.com/aaronriekenberg/httpcat/internal/version"
 )
 
 func main() {
@@ -14,6 +15,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "httpcat: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Try 'httpcat --help' for usage.\n")
 		os.Exit(1)
+	}
+
+	if opts.Version {
+		fmt.Println(version.String())
+		os.Exit(0)
 	}
 
 	if err := client.Do(opts); err != nil {
