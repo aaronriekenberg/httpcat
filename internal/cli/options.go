@@ -31,10 +31,10 @@ type Options struct {
 
 // flag represents a single CLI flag definition.
 type flag struct {
-	long      string
-	short     string
-	takesArg  bool
-	helpText  string
+	long     string
+	short    string
+	takesArg bool
+	helpText string
 }
 
 var flagDefs = []flag{
