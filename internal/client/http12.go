@@ -7,8 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-
-	"golang.org/x/net/http2"
+	"strings"
 
 	"github.com/aaronriekenberg/httpcat/internal/cli"
 	"github.com/aaronriekenberg/httpcat/internal/verbose"
@@ -27,24 +26,30 @@ func doHTTP12(opts *cli.Options, out, errOut io.Writer) error {
 		InsecureSkipVerify: opts.Insecure, //nolint:gosec // intentional per -k flag
 	}
 
-	var transport http.RoundTripper
+	transport := &http.Transport{
+		TLSClientConfig: tlsCfg,
+	}
 
 	if opts.HTTP2PriorKnowledge {
-		// Force HTTP/2 without TLS upgrade negotiation (h2c or direct h2).
-		t2 := &http2.Transport{
-			AllowHTTP:       true, // permit plain-text h2c
-			TLSClientConfig: tlsCfg,
-			DialTLSContext:  nil, // use default
+		// Set protocol based on scheme:
+		//   http://  → UnencryptedHTTP2 (h2c, plain TCP)
+		//   https:// → HTTP2 (TLS + ALPN)
+		var p http.Protocols
+		if strings.HasPrefix(opts.URL, "https://") {
+			p.SetHTTP2(true)
+		} else {
+			p.SetUnencryptedHTTP2(true)
 		}
-		transport = t2
+		transport.Protocols = &p
 		if opts.Verbose {
 			verbose.PrintInfo(errOut, "Using HTTP/2 with prior knowledge")
 		}
 	} else {
-		transport = &http.Transport{
-			TLSClientConfig:   tlsCfg,
-			ForceAttemptHTTP2: true, // negotiate HTTP/2 via ALPN when HTTPS
-		}
+		// Default: negotiate HTTP/1.1 or HTTP/2 via ALPN.
+		var p http.Protocols
+		p.SetHTTP1(true)
+		p.SetHTTP2(true)
+		transport.Protocols = &p
 	}
 
 	client := &http.Client{Transport: transport}
@@ -55,7 +60,6 @@ func doHTTP12(opts *cli.Options, out, errOut io.Writer) error {
 	}
 
 	if opts.Verbose {
-		// Proto isn't known until after the round-trip; print what we know.
 		verbose.PrintInfo(errOut, "Connecting to %s", req.Host)
 		verbose.PrintRequest(errOut, req)
 	}
