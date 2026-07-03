@@ -3,7 +3,9 @@ package client
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/aaronriekenberg/httpcat/internal/cli"
 )
@@ -22,8 +24,13 @@ func newRequest(opts *cli.Options) (*http.Request, error) {
 // --http2-prior-knowledge → HTTP/2 forced via golang.org/x/net/http2
 // default                 → standard net/http (negotiates HTTP/1.1 or HTTP/2)
 func Do(opts *cli.Options) error {
+	return do(opts, os.Stdout, os.Stderr)
+}
+
+// do is the testable implementation.
+func do(opts *cli.Options, out, errOut io.Writer) error {
 	if opts.HTTP3 {
-		err := DoHTTP3(opts)
+		err := doHTTP3(opts, out, errOut)
 		if err == nil {
 			return nil
 		}
@@ -31,7 +38,7 @@ func Do(opts *cli.Options) error {
 			return fmt.Errorf("HTTP/3 required but failed: %w", err)
 		}
 		// Fall back to HTTP/1.x or HTTP/2.
-		return DoHTTP12(opts)
+		return doHTTP12(opts, out, errOut)
 	}
-	return DoHTTP12(opts)
+	return doHTTP12(opts, out, errOut)
 }

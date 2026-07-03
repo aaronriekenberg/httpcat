@@ -17,6 +17,12 @@ import (
 // DoHTTP12 executes an HTTP/1.1 or HTTP/2 request according to opts.
 // Response body is written to stdout; verbose info goes to stderr.
 func DoHTTP12(opts *cli.Options) error {
+	return doHTTP12(opts, os.Stdout, os.Stderr)
+}
+
+// doHTTP12 is the testable implementation that writes body to out and
+// verbose/error info to errOut.
+func doHTTP12(opts *cli.Options, out, errOut io.Writer) error {
 	tlsCfg := &tls.Config{
 		InsecureSkipVerify: opts.Insecure, //nolint:gosec // intentional per -k flag
 	}
@@ -32,7 +38,7 @@ func DoHTTP12(opts *cli.Options) error {
 		}
 		transport = t2
 		if opts.Verbose {
-			verbose.PrintInfo(os.Stderr, "Using HTTP/2 with prior knowledge")
+			verbose.PrintInfo(errOut, "Using HTTP/2 with prior knowledge")
 		}
 	} else {
 		transport = &http.Transport{
@@ -50,8 +56,8 @@ func DoHTTP12(opts *cli.Options) error {
 
 	if opts.Verbose {
 		// Proto isn't known until after the round-trip; print what we know.
-		verbose.PrintInfo(os.Stderr, "Connecting to %s", req.Host)
-		verbose.PrintRequest(os.Stderr, req)
+		verbose.PrintInfo(errOut, "Connecting to %s", req.Host)
+		verbose.PrintRequest(errOut, req)
 	}
 
 	resp, err := client.Do(req)
@@ -61,11 +67,11 @@ func DoHTTP12(opts *cli.Options) error {
 	defer resp.Body.Close()
 
 	if opts.Verbose {
-		verbose.PrintInfo(os.Stderr, "Protocol: %s", resp.Proto)
-		verbose.PrintResponse(os.Stderr, resp)
+		verbose.PrintInfo(errOut, "Protocol: %s", resp.Proto)
+		verbose.PrintResponse(errOut, resp)
 	}
 
-	if _, err := io.Copy(os.Stdout, resp.Body); err != nil {
+	if _, err := io.Copy(out, resp.Body); err != nil {
 		return fmt.Errorf("reading response body: %w", err)
 	}
 

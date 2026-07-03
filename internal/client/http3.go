@@ -16,6 +16,12 @@ import (
 // DoHTTP3 executes an HTTP/3 request using quic-go.
 // Response body is written to stdout; verbose info goes to stderr.
 func DoHTTP3(opts *cli.Options) error {
+	return doHTTP3(opts, os.Stdout, os.Stderr)
+}
+
+// doHTTP3 is the testable implementation that writes body to out and
+// verbose/error info to errOut.
+func doHTTP3(opts *cli.Options, out, errOut io.Writer) error {
 	tlsCfg := &tls.Config{
 		InsecureSkipVerify: opts.Insecure, //nolint:gosec // intentional per -k flag
 	}
@@ -26,7 +32,7 @@ func DoHTTP3(opts *cli.Options) error {
 	defer rt.Close()
 
 	if opts.Verbose {
-		verbose.PrintInfo(os.Stderr, "Using HTTP/3 (QUIC)")
+		verbose.PrintInfo(errOut, "Using HTTP/3 (QUIC)")
 	}
 
 	req, err := newRequest(opts)
@@ -35,8 +41,8 @@ func DoHTTP3(opts *cli.Options) error {
 	}
 
 	if opts.Verbose {
-		verbose.PrintInfo(os.Stderr, "Connecting to %s", req.Host)
-		verbose.PrintRequest(os.Stderr, req)
+		verbose.PrintInfo(errOut, "Connecting to %s", req.Host)
+		verbose.PrintRequest(errOut, req)
 	}
 
 	resp, err := rt.RoundTrip(req)
@@ -46,11 +52,11 @@ func DoHTTP3(opts *cli.Options) error {
 	defer resp.Body.Close()
 
 	if opts.Verbose {
-		verbose.PrintInfo(os.Stderr, "Protocol: %s", resp.Proto)
-		verbose.PrintResponse(os.Stderr, resp)
+		verbose.PrintInfo(errOut, "Protocol: %s", resp.Proto)
+		verbose.PrintResponse(errOut, resp)
 	}
 
-	if _, err := io.Copy(os.Stdout, resp.Body); err != nil {
+	if _, err := io.Copy(out, resp.Body); err != nil {
 		return fmt.Errorf("reading response body: %w", err)
 	}
 
