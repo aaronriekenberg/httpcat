@@ -23,7 +23,8 @@ type Options struct {
 	Verbose bool // -v, --verbose: print request/response headers to stderr
 
 	// Request
-	Method string // -X, --request: HTTP method (default: GET)
+	Method  string   // -X, --request: HTTP method (default: GET)
+	Headers []string // -H, --header: request headers (e.g., "Content-Type: application/json")
 
 	// Meta
 	Version bool // -V, --version: print version and exit
@@ -47,6 +48,7 @@ var flagDefs = []flag{
 	{long: "insecure", short: "k", takesArg: false, helpText: "Skip TLS certificate verification"},
 	{long: "verbose", short: "v", takesArg: false, helpText: "Print request and response headers to stderr"},
 	{long: "request", short: "X", takesArg: true, helpText: "HTTP method to use (default: GET)"},
+	{long: "header", short: "H", takesArg: true, helpText: "Add a request header (e.g., 'Content-Type: application/json'); can be used multiple times"},
 	{long: "version", short: "V", takesArg: false, helpText: "Print version information and exit"},
 }
 
@@ -177,6 +179,8 @@ func applyFlag(opts *Options, long, val string) error {
 		opts.Verbose = true
 	case "request":
 		opts.Method = strings.ToUpper(val)
+	case "header":
+		opts.Headers = append(opts.Headers, val)
 	case "version":
 		opts.Version = true
 	default:

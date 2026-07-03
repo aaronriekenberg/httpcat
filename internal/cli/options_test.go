@@ -331,3 +331,70 @@ func TestVersionWithURL(t *testing.T) {
 		t.Error("expected Version=true")
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Headers (-H, --header)
+// ---------------------------------------------------------------------------
+
+func TestHeaderLong(t *testing.T) {
+	opts := parseOK(t, "--header", "Content-Type: application/json", "https://example.com")
+	if len(opts.Headers) != 1 {
+		t.Errorf("expected 1 header, got %d", len(opts.Headers))
+	}
+	if opts.Headers[0] != "Content-Type: application/json" {
+		t.Errorf("unexpected header: %q", opts.Headers[0])
+	}
+}
+
+func TestHeaderShort(t *testing.T) {
+	opts := parseOK(t, "-H", "Authorization: Bearer token", "https://example.com")
+	if len(opts.Headers) != 1 {
+		t.Errorf("expected 1 header, got %d", len(opts.Headers))
+	}
+	if opts.Headers[0] != "Authorization: Bearer token" {
+		t.Errorf("unexpected header: %q", opts.Headers[0])
+	}
+}
+
+func TestHeaderLongWithEquals(t *testing.T) {
+	opts := parseOK(t, "--header=X-Custom-Header: value", "https://example.com")
+	if len(opts.Headers) != 1 {
+		t.Errorf("expected 1 header, got %d", len(opts.Headers))
+	}
+	if opts.Headers[0] != "X-Custom-Header: value" {
+		t.Errorf("unexpected header: %q", opts.Headers[0])
+	}
+}
+
+func TestMultipleHeaders(t *testing.T) {
+	opts := parseOK(t, "-H", "Content-Type: application/json", "-H", "Accept: */*", "https://example.com")
+	if len(opts.Headers) != 2 {
+		t.Errorf("expected 2 headers, got %d", len(opts.Headers))
+	}
+	if opts.Headers[0] != "Content-Type: application/json" {
+		t.Errorf("unexpected header[0]: %q", opts.Headers[0])
+	}
+	if opts.Headers[1] != "Accept: */*" {
+		t.Errorf("unexpected header[1]: %q", opts.Headers[1])
+	}
+}
+
+func TestMultipleHeadersMixed(t *testing.T) {
+	opts := parseOK(t, "--header", "X-First: 1", "-H", "X-Second: 2", "https://example.com")
+	if len(opts.Headers) != 2 {
+		t.Errorf("expected 2 headers, got %d", len(opts.Headers))
+	}
+	if opts.Headers[0] != "X-First: 1" {
+		t.Errorf("unexpected header[0]: %q", opts.Headers[0])
+	}
+	if opts.Headers[1] != "X-Second: 2" {
+		t.Errorf("unexpected header[1]: %q", opts.Headers[1])
+	}
+}
+
+func TestNoHeaders(t *testing.T) {
+	opts := parseOK(t, "https://example.com")
+	if len(opts.Headers) != 0 {
+		t.Errorf("expected 0 headers, got %d", len(opts.Headers))
+	}
+}

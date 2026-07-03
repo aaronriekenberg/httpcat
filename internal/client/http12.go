@@ -54,7 +54,7 @@ func doHTTP12(opts *cli.Options, out, errOut io.Writer) error {
 
 	client := &http.Client{Transport: transport}
 
-	req, err := http.NewRequest(opts.Method, opts.URL, nil)
+	req, err := newRequest(opts)
 	if err != nil {
 		return fmt.Errorf("building request: %w", err)
 	}

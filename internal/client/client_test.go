@@ -307,3 +307,120 @@ func TestTLSConfigPropagated(t *testing.T) {
 // Ensure the package-level tls import doesn't cause an "imported and not used"
 // error — it is used in the TLS server tests via httptest.
 var _ = tls.Config{}
+
+// ---------------------------------------------------------------------------
+// Request headers
+// ---------------------------------------------------------------------------
+
+func TestSingleHeader(t *testing.T) {
+	srv := startServer(t, func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, r.Header.Get("X-Custom"))
+	})
+
+	var out strings.Builder
+	opts := &cli.Options{
+		Method:  "GET",
+		URL:     srv.URL,
+		Headers: []string{"X-Custom: test-value"},
+	}
+	if err := client.DoWithWriters(opts, &out, io.Discard); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out.String() != "test-value" {
+		t.Errorf("body = %q, want %q", out.String(), "test-value")
+	}
+}
+
+func TestMultipleHeaders(t *testing.T) {
+	srv := startServer(t, func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "%s|%s", r.Header.Get("X-First"), r.Header.Get("X-Second"))
+	})
+
+	var out strings.Builder
+	opts := &cli.Options{
+		Method:  "GET",
+		URL:     srv.URL,
+		Headers: []string{"X-First: one", "X-Second: two"},
+	}
+	if err := client.DoWithWriters(opts, &out, io.Discard); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out.String() != "one|two" {
+		t.Errorf("body = %q, want %q", out.String(), "one|two")
+	}
+}
+
+func TestHeaderWithColonInValue(t *testing.T) {
+	srv := startServer(t, func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, r.Header.Get("Authorization"))
+	})
+
+	var out strings.Builder
+	opts := &cli.Options{
+		Method:  "GET",
+		URL:     srv.URL,
+		Headers: []string{"Authorization: Bearer token:with:colons"},
+	}
+	if err := client.DoWithWriters(opts, &out, io.Discard); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out.String() != "Bearer token:with:colons" {
+		t.Errorf("body = %q, want %q", out.String(), "Bearer token:with:colons")
+	}
+}
+
+func TestHeaderWithSpaceInValue(t *testing.T) {
+	srv := startServer(t, func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, r.Header.Get("Content-Type"))
+	})
+
+	var out strings.Builder
+	opts := &cli.Options{
+		Method:  "GET",
+		URL:     srv.URL,
+		Headers: []string{"Content-Type: application/json; charset=utf-8"},
+	}
+	if err := client.DoWithWriters(opts, &out, io.Discard); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out.String() != "application/json; charset=utf-8" {
+		t.Errorf("body = %q, want %q", out.String(), "application/json; charset=utf-8")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Header validation
+// ---------------------------------------------------------------------------
+
+func TestInvalidHeaderMissingColon(t *testing.T) {
+	req, _ := http.NewRequest("GET", "https://example.com", nil)
+	err := client.ApplyHeader(req, "InvalidHeader")
+	if err == nil {
+		t.Error("expected error for header without colon")
+	}
+	if !strings.Contains(err.Error(), "must be 'Key: value'") {
+		t.Errorf("error %q should mention header format", err.Error())
+	}
+}
+
+func TestInvalidHeaderEmptyKey(t *testing.T) {
+	req, _ := http.NewRequest("GET", "https://example.com", nil)
+	err := client.ApplyHeader(req, ": value")
+	if err == nil {
+		t.Error("expected error for empty header key")
+	}
+	if !strings.Contains(err.Error(), "key cannot be empty") {
+		t.Errorf("error %q should mention empty key", err.Error())
+	}
+}
+
+func TestHeaderWithLeadingSpace(t *testing.T) {
+	req, _ := http.NewRequest("GET", "https://example.com", nil)
+	err := client.ApplyHeader(req, "Content-Type:  application/json")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if req.Header.Get("Content-Type") != "application/json" {
+		t.Errorf("header value = %q, want %q", req.Header.Get("Content-Type"), "application/json")
+	}
+}

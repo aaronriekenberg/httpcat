@@ -34,6 +34,7 @@ Only `http://` and `https://` URLs are supported.
 | `-k`, `--insecure` | Skip TLS certificate verification |
 | `-v`, `--verbose` | Print request and response headers to stderr |
 | `-X`, `--request <method>` | HTTP method to use (default: `GET`) |
+| `-H`, `--header <value>` | Add a request header (e.g., `Content-Type: application/json`); can be used multiple times |
 | `-V`, `--version` | Print version information and exit |
 | `-h`, `--help` | Show help |
 
@@ -98,6 +99,12 @@ Bundle short flags:
 
 ```sh
 httpcat -kv https://localhost:8443/
+```
+
+Send custom headers:
+
+```sh
+httpcat -H "Content-Type: application/json" -H "Authorization: Bearer token" https://httpbin.org/post
 ```
 
 Print version:
