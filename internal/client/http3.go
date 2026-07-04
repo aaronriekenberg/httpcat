@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 
 	"github.com/quic-go/quic-go/http3"
@@ -31,6 +32,8 @@ func doHTTP3(opts *cli.Options, out, errOut io.Writer) error {
 	}
 	defer rt.Close()
 
+	client := &http.Client{Transport: rt}
+
 	if opts.Verbose {
 		verbose.PrintInfo(errOut, "Using HTTP/3 (QUIC)")
 	}
@@ -45,7 +48,7 @@ func doHTTP3(opts *cli.Options, out, errOut io.Writer) error {
 		verbose.PrintRequest(errOut, req)
 	}
 
-	resp, err := rt.RoundTrip(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("HTTP/3 request failed: %w", err)
 	}
