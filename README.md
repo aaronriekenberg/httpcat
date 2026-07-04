@@ -4,11 +4,15 @@ A minimal command-line HTTP client written in Go, supporting HTTP/1.1, HTTP/2, a
 
 ## Install
 
+1. Download the latest release binary for linux/mac/windows from [github releases](https://github.com/aaronriekenberg/httpcat/releases)
+
+2. go install:
+
 ```sh
 go install github.com/aaronriekenberg/httpcat@latest
 ```
 
-Or build from source:
+3. build from source:
 
 ```sh
 git clone https://github.com/aaronriekenberg/httpcat
