@@ -42,7 +42,7 @@ func TestPrintRequestFirstLine(t *testing.T) {
 	if len(lines) < 1 {
 		t.Fatal("no output lines")
 	}
-	want := "> GET /path?q=1 HTTP/1.1"
+	want := "> GET /path?q=1"
 	if lines[0] != want {
 		t.Errorf("first line = %q, want %q", lines[0], want)
 	}

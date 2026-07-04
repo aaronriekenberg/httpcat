@@ -60,7 +60,7 @@ httpcat -v https://httpbin.org/get
 
 ```
 * Connecting to httpbin.org
-> GET /get HTTP/1.1
+> GET /get
 > Host: httpbin.org
 >
 * Protocol: HTTP/2.0

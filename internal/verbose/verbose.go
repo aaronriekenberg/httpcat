@@ -11,7 +11,7 @@ import (
 // PrintRequest writes request metadata to w in curl verbose format.
 // Lines are prefixed with "> ".
 func PrintRequest(w io.Writer, req *http.Request) {
-	fmt.Fprintf(w, "> %s %s %s\r\n", req.Method, req.URL.RequestURI(), req.Proto)
+	fmt.Fprintf(w, "> %s %s\r\n", req.Method, req.URL.RequestURI())
 	fmt.Fprintf(w, "> Host: %s\r\n", req.Host)
 
 	keys := make([]string, 0, len(req.Header))
