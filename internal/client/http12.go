@@ -36,15 +36,21 @@ func doHTTP12(opts *cli.Options, out, errOut io.Writer) error {
 		//   https:// → HTTP2 (TLS + ALPN)
 		var p http.Protocols
 		if strings.HasPrefix(opts.URL, "https://") {
+			if opts.Verbose {
+				verbose.PrintInfo(errOut, "Using HTTP/2 (TLS + ALPN)")
+			}
 			p.SetHTTP2(true)
 		} else {
+			if opts.Verbose {
+				verbose.PrintInfo(errOut, "Using H2C (HTTP/2 over plain TCP)")
+			}
 			p.SetUnencryptedHTTP2(true)
 		}
 		transport.Protocols = &p
-		if opts.Verbose {
-			verbose.PrintInfo(errOut, "Using HTTP/2 with prior knowledge")
-		}
 	} else {
+		if opts.Verbose {
+			verbose.PrintInfo(errOut, "Using HTTP/1.1 or HTTP/2 (negotiated via ALPN)")
+		}
 		// Default: negotiate HTTP/1.1 or HTTP/2 via ALPN.
 		var p http.Protocols
 		p.SetHTTP1(true)
