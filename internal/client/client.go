@@ -28,7 +28,9 @@ func newRequest(opts *cli.Options) (*http.Request, error) {
 	// Apply custom headers
 	for _, header := range opts.Headers {
 		if err := applyHeader(req, header); err != nil {
-			body.Close()
+			if body != nil {
+				body.Close()
+			}
 			return nil, err
 		}
 	}

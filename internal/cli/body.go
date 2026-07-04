@@ -28,7 +28,7 @@ func ReadBody(opts *Options) (io.ReadCloser, error) {
 	// Check for special prefixes
 	if strings.HasPrefix(bodySpec, "@-") {
 		// Read from stdin
-		return io.NopCloser(os.Stdin), nil
+		return os.Stdin, nil
 	}
 
 	if strings.HasPrefix(bodySpec, "@") {
