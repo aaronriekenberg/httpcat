@@ -59,6 +59,7 @@ httpcat -v https://httpbin.org/get
 ```
 
 ```
+* Using HTTP/1.1 or HTTP/2 (negotiated via ALPN)
 * Connecting to httpbin.org
 > GET /get
 > Host: httpbin.org

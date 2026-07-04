@@ -222,8 +222,8 @@ func TestHTTP2PriorKnowledgeVerboseInfo(t *testing.T) {
 	// Ignore the error — the test server speaks HTTP/1.1, not h2c.
 	_ = client.DoWithWriters(opts, io.Discard, &errOut)
 
-	if !strings.Contains(errOut.String(), "HTTP/2 with prior knowledge") {
-		t.Errorf("verbose output missing h2 prior knowledge message, got:\n%s", errOut.String())
+	if !strings.Contains(errOut.String(), "Using H2C (HTTP/2 over plain TCP)") {
+		t.Errorf("verbose output missing h2c message, got:\n%s", errOut.String())
 	}
 }
 
