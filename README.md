@@ -39,6 +39,8 @@ Only `http://` and `https://` URLs are supported.
 | `-v`, `--verbose` | Print request and response headers to stderr |
 | `-X`, `--request <method>` | HTTP method to use (default: `GET`) |
 | `-H`, `--header <value>` | Add a request header (e.g., `Content-Type: application/json`); can be used multiple times |
+| `--json <value>` | Send JSON body; can be a direct string, `@-` to read from stdin, or `@filename` to read from file |
+| `--data-binary <value>` | Send binary body; can be `@-` to read from stdin, or `@filename` to read from file |
 | `-V`, `--version` | Print version information and exit |
 | `-h`, `--help` | Show help |
 
@@ -109,6 +111,36 @@ Send custom headers:
 
 ```sh
 httpcat -H "Content-Type: application/json" -H "Authorization: Bearer token" https://httpbin.org/post
+```
+
+Send JSON body as direct string:
+
+```sh
+httpcat --json '{"hello": "world"}' https://httpbin.org/post
+```
+
+Send JSON body from file:
+
+```sh
+httpcat --json @request.json -X POST https://httpbin.org/post
+```
+
+Send JSON body from stdin:
+
+```sh
+echo '{"key": "value"}' | httpcat --json @- -X POST https://httpbin.org/post
+```
+
+Send binary body from file:
+
+```sh
+httpcat --data-binary @image.png -X POST https://httpbin.org/post
+```
+
+Send binary body from stdin:
+
+```sh
+cat binary_data.bin | httpcat --data-binary @- -X POST https://httpbin.org/post
 ```
 
 Print version:

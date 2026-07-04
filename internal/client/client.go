@@ -12,13 +12,23 @@ import (
 
 // newRequest creates an *http.Request from options and applies custom headers.
 func newRequest(opts *cli.Options) (*http.Request, error) {
-	req, err := http.NewRequest(opts.Method, opts.URL, nil)
+	body, err := cli.ReadBody(opts)
 	if err != nil {
+		return nil, fmt.Errorf("reading body: %w", err)
+	}
+
+	req, err := http.NewRequest(opts.Method, opts.URL, body)
+	if err != nil {
+		if body != nil {
+			body.Close()
+		}
 		return nil, fmt.Errorf("building request: %w", err)
 	}
+
 	// Apply custom headers
 	for _, header := range opts.Headers {
 		if err := applyHeader(req, header); err != nil {
+			body.Close()
 			return nil, err
 		}
 	}

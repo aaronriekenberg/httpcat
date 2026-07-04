@@ -26,6 +26,10 @@ type Options struct {
 	Method  string   // -X, --request: HTTP method (default: GET)
 	Headers []string // -H, --header: request headers (e.g., "Content-Type: application/json")
 
+	// Request body
+	JSON       string // --json: JSON body (can be direct string, @-, or @filename)
+	DataBinary string // --data-binary: binary body (can be @-, or @filename)
+
 	// Meta
 	Version bool // -V, --version: print version and exit
 
@@ -49,6 +53,8 @@ var flagDefs = []flag{
 	{long: "verbose", short: "v", takesArg: false, helpText: "Print request and response headers to stderr"},
 	{long: "request", short: "X", takesArg: true, helpText: "HTTP method to use (default: GET)"},
 	{long: "header", short: "H", takesArg: true, helpText: "Add a request header (e.g., 'Content-Type: application/json'); can be used multiple times"},
+	{long: "json", short: "", takesArg: true, helpText: "Send JSON body (as string, @- for stdin, or @filename)"},
+	{long: "data-binary", short: "", takesArg: true, helpText: "Send binary body (@- for stdin, or @filename)"},
 	{long: "version", short: "V", takesArg: false, helpText: "Print version information and exit"},
 }
 
@@ -158,6 +164,10 @@ func Parse(args []string) (*Options, error) {
 		opts.HTTP3 = true
 	}
 
+	if opts.JSON != "" && opts.DataBinary != "" {
+		return nil, errors.New("--json and --data-binary are mutually exclusive")
+	}
+
 	if !opts.Version && !strings.HasPrefix(opts.URL, "http://") && !strings.HasPrefix(opts.URL, "https://") {
 		return nil, fmt.Errorf("unsupported scheme in URL %q (only http and https are supported)", opts.URL)
 	}
@@ -181,6 +191,10 @@ func applyFlag(opts *Options, long, val string) error {
 		opts.Method = strings.ToUpper(val)
 	case "header":
 		opts.Headers = append(opts.Headers, val)
+	case "json":
+		opts.JSON = val
+	case "data-binary":
+		opts.DataBinary = val
 	case "version":
 		opts.Version = true
 	default:
