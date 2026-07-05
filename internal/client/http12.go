@@ -6,35 +6,23 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/aaronriekenberg/httpcat/internal/cli"
 	"github.com/aaronriekenberg/httpcat/internal/verbose"
 )
 
-// DoHTTP12 executes an HTTP/1.1 or HTTP/2 request according to opts.
-// Response body is written to stdout; verbose info goes to stderr.
-func DoHTTP12(opts *cli.Options) error {
-	return doHTTP12(opts, os.Stdout, os.Stderr, nil)
-}
-
-// doHTTP12 is the testable implementation that writes body to out and
-// verbose/error info to errOut. bs is a bodySource for potential retries.
+// doHTTP12 executes an HTTP/1.1 or HTTP/2 request according to opts.
 func doHTTP12(opts *cli.Options, out, errOut io.Writer, bs *bodySource) error {
-	tlsCfg := &tls.Config{
-		InsecureSkipVerify: opts.Insecure, //nolint:gosec // intentional per -k flag
-	}
-
 	transport := &http.Transport{
-		TLSClientConfig: tlsCfg,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: opts.Insecure, //nolint:gosec
+		},
 	}
 
+	// Configure protocol preferences
+	var p http.Protocols
 	if opts.HTTP2PriorKnowledge {
-		// Set protocol based on scheme:
-		//   http://  → UnencryptedHTTP2 (h2c, plain TCP)
-		//   https:// → HTTP2 (TLS + ALPN)
-		var p http.Protocols
 		if strings.HasPrefix(opts.URL, "https://") {
 			if opts.Verbose {
 				verbose.PrintInfo(errOut, "Using HTTP/2 (TLS + ALPN)")
@@ -46,23 +34,18 @@ func doHTTP12(opts *cli.Options, out, errOut io.Writer, bs *bodySource) error {
 			}
 			p.SetUnencryptedHTTP2(true)
 		}
-		transport.Protocols = &p
 	} else {
 		if opts.Verbose {
 			verbose.PrintInfo(errOut, "Using HTTP/1.1 or HTTP/2 (negotiated via ALPN)")
 		}
-		// Default: negotiate HTTP/1.1 or HTTP/2 via ALPN.
-		var p http.Protocols
 		p.SetHTTP1(true)
 		p.SetHTTP2(true)
-		transport.Protocols = &p
 	}
-
-	client := &http.Client{Transport: transport}
+	transport.Protocols = &p
 
 	req, err := newRequest(opts, bs)
 	if err != nil {
-		return fmt.Errorf("building request: %w", err)
+		return err
 	}
 
 	if opts.Verbose {
@@ -70,7 +53,7 @@ func doHTTP12(opts *cli.Options, out, errOut io.Writer, bs *bodySource) error {
 		verbose.PrintRequest(errOut, req)
 	}
 
-	resp, err := client.Do(req)
+	resp, err := (&http.Client{Transport: transport}).Do(req)
 	if err != nil {
 		return fmt.Errorf("performing request: %w", err)
 	}
@@ -81,9 +64,6 @@ func doHTTP12(opts *cli.Options, out, errOut io.Writer, bs *bodySource) error {
 		verbose.PrintResponse(errOut, resp)
 	}
 
-	if _, err := io.Copy(out, resp.Body); err != nil {
-		return fmt.Errorf("reading response body: %w", err)
-	}
-
-	return nil
+	_, err = io.Copy(out, resp.Body)
+	return err
 }

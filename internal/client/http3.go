@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 
 	"github.com/quic-go/quic-go/http3"
 
@@ -14,25 +13,16 @@ import (
 	"github.com/aaronriekenberg/httpcat/internal/verbose"
 )
 
-// DoHTTP3 executes an HTTP/3 request using quic-go.
-// Response body is written to stdout; verbose info goes to stderr.
-func DoHTTP3(opts *cli.Options) error {
-	return doHTTP3(opts, os.Stdout, os.Stderr, nil)
-}
-
-// doHTTP3 is the testable implementation that writes body to out and
-// verbose/error info to errOut. bs is a bodySource for potential retries.
+// doHTTP3 executes an HTTP/3 request using quic-go.
 func doHTTP3(opts *cli.Options, out, errOut io.Writer, bs *bodySource) error {
-	tlsCfg := &tls.Config{
-		InsecureSkipVerify: opts.Insecure, //nolint:gosec // intentional per -k flag
+	client := &http.Client{
+		Transport: &http3.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: opts.Insecure, //nolint:gosec
+			},
+		},
 	}
-
-	rt := &http3.Transport{
-		TLSClientConfig: tlsCfg,
-	}
-	defer rt.Close()
-
-	client := &http.Client{Transport: rt}
+	defer client.Transport.(*http3.Transport).Close()
 
 	if opts.Verbose {
 		verbose.PrintInfo(errOut, "Using HTTP/3 (QUIC)")
@@ -59,9 +49,6 @@ func doHTTP3(opts *cli.Options, out, errOut io.Writer, bs *bodySource) error {
 		verbose.PrintResponse(errOut, resp)
 	}
 
-	if _, err := io.Copy(out, resp.Body); err != nil {
-		return fmt.Errorf("reading response body: %w", err)
-	}
-
-	return nil
+	_, err = io.Copy(out, resp.Body)
+	return err
 }

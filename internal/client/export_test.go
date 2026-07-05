@@ -1,5 +1,4 @@
-// export_test.go exposes internal functions for use by the client_test package.
-// This file is only compiled during tests.
+// export_test.go exposes internal functions for testing.
 package client
 
 import (
@@ -9,45 +8,32 @@ import (
 	"github.com/aaronriekenberg/httpcat/internal/cli"
 )
 
-// DoWithWriters is a test hook that calls the internal do() with explicit
-// writers so tests can capture stdout/stderr without redirecting os.Stdout.
+// DoWithWriters calls do() with explicit writers for testing.
 func DoWithWriters(opts *cli.Options, out, errOut io.Writer) error {
 	return do(opts, out, errOut)
 }
 
-// ApplyHeader is a test hook that exposes the internal applyHeader function.
+// ApplyHeader exposes the internal applyHeader function for testing.
 func ApplyHeader(req *http.Request, header string) error {
 	return applyHeader(req, header)
 }
 
-// NewBodySource is a test hook that exposes the internal newBodySource function.
+// NewBodySource exposes the internal newBodySource function for testing.
 func NewBodySource(spec string) (*bodySource, error) {
 	return newBodySource(spec)
 }
 
-// bodySource methods exposed for testing
-// (The bodySource type itself needs to be exported)
-
-// GetReader is a test hook for bodySource.getReader().
+// GetReader exposes the internal getReader method for testing.
 func (bs *bodySource) GetReader() (io.ReadCloser, error) {
-	if bs == nil {
-		return nil, nil
-	}
 	return bs.getReader()
 }
 
-// BufferStdinIfNeeded is a test hook for bodySource.bufferStdinIfNeeded().
+// BufferStdinIfNeeded exposes the internal bufferStdinIfNeeded method for testing.
 func (bs *bodySource) BufferStdinIfNeeded() error {
-	if bs == nil {
-		return nil
-	}
 	return bs.bufferStdinIfNeeded()
 }
 
-// Close is a test hook for bodySource.close().
+// Close exposes the internal close method for testing.
 func (bs *bodySource) Close() error {
-	if bs == nil {
-		return nil
-	}
 	return bs.close()
 }

@@ -398,8 +398,8 @@ func TestInvalidHeaderMissingColon(t *testing.T) {
 	if err == nil {
 		t.Error("expected error for header without colon")
 	}
-	if !strings.Contains(err.Error(), "must be 'Key: value'") {
-		t.Errorf("error %q should mention header format", err.Error())
+	if !strings.Contains(err.Error(), "missing colon") {
+		t.Errorf("error %q should mention missing colon", err.Error())
 	}
 }
 
@@ -409,7 +409,7 @@ func TestInvalidHeaderEmptyKey(t *testing.T) {
 	if err == nil {
 		t.Error("expected error for empty header key")
 	}
-	if !strings.Contains(err.Error(), "key cannot be empty") {
+	if !strings.Contains(err.Error(), "empty key") {
 		t.Errorf("error %q should mention empty key", err.Error())
 	}
 }
