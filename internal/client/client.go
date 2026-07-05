@@ -16,11 +16,11 @@ import (
 // (for HTTP/3 fallback to HTTP/1.1 or HTTP/2).
 // Exported as BodySource for testing.
 type bodySource struct {
-	spec   string       // The body spec from CLI (direct string, @-, or @filename)
-	file   *os.File     // For files, kept open for seeking
-	buffer []byte       // For stdin pipes that need retry (buffered eagerly)
-	reader io.Reader    // Current reader (may be reused)
-	used   bool         // Whether this source has been read already
+	spec   string    // The body spec from CLI (direct string, @-, or @filename)
+	file   *os.File  // For files, kept open for seeking
+	buffer []byte    // For stdin pipes that need retry (buffered eagerly)
+	reader io.Reader // Current reader (may be reused)
+	used   bool      // Whether this source has been read already
 }
 
 // newBodySource creates a bodySource for the given body spec.
