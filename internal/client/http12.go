@@ -16,12 +16,12 @@ import (
 // DoHTTP12 executes an HTTP/1.1 or HTTP/2 request according to opts.
 // Response body is written to stdout; verbose info goes to stderr.
 func DoHTTP12(opts *cli.Options) error {
-	return doHTTP12(opts, os.Stdout, os.Stderr)
+	return doHTTP12(opts, os.Stdout, os.Stderr, nil)
 }
 
 // doHTTP12 is the testable implementation that writes body to out and
-// verbose/error info to errOut.
-func doHTTP12(opts *cli.Options, out, errOut io.Writer) error {
+// verbose/error info to errOut. bs is a bodySource for potential retries.
+func doHTTP12(opts *cli.Options, out, errOut io.Writer, bs *bodySource) error {
 	tlsCfg := &tls.Config{
 		InsecureSkipVerify: opts.Insecure, //nolint:gosec // intentional per -k flag
 	}
@@ -60,7 +60,7 @@ func doHTTP12(opts *cli.Options, out, errOut io.Writer) error {
 
 	client := &http.Client{Transport: transport}
 
-	req, err := newRequest(opts)
+	req, err := newRequest(opts, bs)
 	if err != nil {
 		return fmt.Errorf("building request: %w", err)
 	}
