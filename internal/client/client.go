@@ -79,7 +79,7 @@ func (bs *bodySource) getReader() (io.ReadCloser, error) {
 	}
 
 	path := bs.spec[1:]
-	
+
 	// stdin
 	if path == "-" {
 		if bs.buffer != nil {
@@ -154,12 +154,12 @@ func applyHeader(req *http.Request, header string) error {
 	if idx < 0 {
 		return fmt.Errorf("invalid header %q: missing colon", header)
 	}
-	
+
 	key := header[:idx]
 	if key == "" {
 		return fmt.Errorf("invalid header %q: empty key", header)
 	}
-	
+
 	// Trim leading space from value
 	value := strings.TrimLeft(header[idx+1:], " ")
 	req.Header.Add(key, value)
