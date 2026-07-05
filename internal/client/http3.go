@@ -22,7 +22,6 @@ func doHTTP3(opts *cli.Options, out, errOut io.Writer, bs *bodySource) error {
 			},
 		},
 	}
-	defer client.Transport.(*http3.Transport).Close()
 
 	if opts.Verbose {
 		verbose.PrintInfo(errOut, "Using HTTP/3 (QUIC)")

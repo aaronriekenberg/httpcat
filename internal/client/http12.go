@@ -14,11 +14,6 @@ import (
 
 // doHTTP12 executes an HTTP/1.1 or HTTP/2 request according to opts.
 func doHTTP12(opts *cli.Options, out, errOut io.Writer, bs *bodySource) error {
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: opts.Insecure, //nolint:gosec
-		},
-	}
 
 	// Configure protocol preferences
 	var p http.Protocols
@@ -41,7 +36,15 @@ func doHTTP12(opts *cli.Options, out, errOut io.Writer, bs *bodySource) error {
 		p.SetHTTP1(true)
 		p.SetHTTP2(true)
 	}
-	transport.Protocols = &p
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: opts.Insecure, //nolint:gosec
+			},
+			Protocols: &p,
+		},
+	}
 
 	req, err := newRequest(opts, bs)
 	if err != nil {
@@ -53,7 +56,7 @@ func doHTTP12(opts *cli.Options, out, errOut io.Writer, bs *bodySource) error {
 		verbose.PrintRequest(errOut, req)
 	}
 
-	resp, err := (&http.Client{Transport: transport}).Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("performing request: %w", err)
 	}
