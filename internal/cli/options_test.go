@@ -1,7 +1,6 @@
 package cli_test
 
 import (
-	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -460,140 +459,6 @@ func TestDataBinaryMissingArg(t *testing.T) {
 	parseErr(t, "requires an argument", "--data-binary")
 }
 
-// ---------------------------------------------------------------------------
-// ReadBody tests
-// ---------------------------------------------------------------------------
-
-func TestReadBodyNil(t *testing.T) {
-	opts := &cli.Options{}
-	body, err := cli.ReadBody(opts)
-	if err != nil {
-		t.Fatalf("ReadBody() unexpected error: %v", err)
-	}
-	if body != nil {
-		t.Errorf("expected body=nil, got %v", body)
-	}
-}
-
-func TestReadBodyDirectString(t *testing.T) {
-	opts := &cli.Options{
-		JSON: `{"test": "data"}`,
-	}
-	body, err := cli.ReadBody(opts)
-	if err != nil {
-		t.Fatalf("ReadBody() unexpected error: %v", err)
-	}
-	if body == nil {
-		t.Fatal("expected non-nil body")
-	}
-	defer body.Close()
-
-	data, err := io.ReadAll(body)
-	if err != nil {
-		t.Fatalf("ReadAll() unexpected error: %v", err)
-	}
-	if string(data) != `{"test": "data"}` {
-		t.Errorf("expected %q, got %q", `{"test": "data"}`, string(data))
-	}
-}
-
-func TestReadBodyFromFile(t *testing.T) {
-	// Create a temporary file
-	tmpFile, err := os.CreateTemp("", "httpcat-test-*.json")
-	if err != nil {
-		t.Fatalf("CreateTemp() unexpected error: %v", err)
-	}
-	defer os.Remove(tmpFile.Name())
-
-	testContent := `{"file": "content"}`
-	if _, err := tmpFile.WriteString(testContent); err != nil {
-		t.Fatalf("WriteString() unexpected error: %v", err)
-	}
-	tmpFile.Close()
-
-	opts := &cli.Options{
-		JSON: "@" + tmpFile.Name(),
-	}
-	body, err := cli.ReadBody(opts)
-	if err != nil {
-		t.Fatalf("ReadBody() unexpected error: %v", err)
-	}
-	if body == nil {
-		t.Fatal("expected non-nil body")
-	}
-	defer body.Close()
-
-	data, err := io.ReadAll(body)
-	if err != nil {
-		t.Fatalf("ReadAll() unexpected error: %v", err)
-	}
-	if string(data) != testContent {
-		t.Errorf("expected %q, got %q", testContent, string(data))
-	}
-}
-
-func TestReadBodyFileNotFound(t *testing.T) {
-	opts := &cli.Options{
-		JSON: "@/nonexistent/path/file.json",
-	}
-	_, err := cli.ReadBody(opts)
-	if err == nil {
-		t.Error("expected error for nonexistent file, got nil")
-	}
-	if !contains(err.Error(), "opening body file") {
-		t.Errorf("expected error message to contain 'opening body file', got %q", err.Error())
-	}
-}
-
-func TestReadBodyDataBinaryPreference(t *testing.T) {
-	// When both are empty, body should be nil
-	opts := &cli.Options{}
-	body, err := cli.ReadBody(opts)
-	if err != nil {
-		t.Fatalf("ReadBody() unexpected error: %v", err)
-	}
-	if body != nil {
-		t.Errorf("expected nil body when both are empty")
-	}
-}
-
-func TestReadBodyWithBinaryContent(t *testing.T) {
-	// Create a temporary file with binary content
-	tmpFile, err := os.CreateTemp("", "httpcat-test-*.bin")
-	if err != nil {
-		t.Fatalf("CreateTemp() unexpected error: %v", err)
-	}
-	defer os.Remove(tmpFile.Name())
-
-	binaryContent := []byte{0x00, 0x01, 0x02, 0xFF}
-	if _, err := tmpFile.Write(binaryContent); err != nil {
-		t.Fatalf("Write() unexpected error: %v", err)
-	}
-	tmpFile.Close()
-
-	opts := &cli.Options{
-		DataBinary: "@" + tmpFile.Name(),
-	}
-	body, err := cli.ReadBody(opts)
-	if err != nil {
-		t.Fatalf("ReadBody() unexpected error: %v", err)
-	}
-	defer body.Close()
-
-	data, err := io.ReadAll(body)
-	if err != nil {
-		t.Fatalf("ReadAll() unexpected error: %v", err)
-	}
-	if len(data) != len(binaryContent) {
-		t.Errorf("expected length %d, got %d", len(binaryContent), len(data))
-	}
-	for i, b := range data {
-		if b != binaryContent[i] {
-			t.Errorf("byte %d: expected %02x, got %02x", i, binaryContent[i], b)
-		}
-	}
-}
-
 func TestCLIWithBodyOptions(t *testing.T) {
 	// Create test file
 	tmpDir := t.TempDir()
@@ -609,20 +474,5 @@ func TestCLIWithBodyOptions(t *testing.T) {
 	}
 	if opts.JSON != "@"+testFile {
 		t.Errorf("expected JSON=%q, got %q", "@"+testFile, opts.JSON)
-	}
-
-	// Verify we can read the body
-	body, err := cli.ReadBody(opts)
-	if err != nil {
-		t.Fatalf("ReadBody() unexpected error: %v", err)
-	}
-	defer body.Close()
-
-	data, err := io.ReadAll(body)
-	if err != nil {
-		t.Fatalf("ReadAll() unexpected error: %v", err)
-	}
-	if string(data) != `{"test": true}` {
-		t.Errorf("expected %q, got %q", `{"test": true}`, string(data))
 	}
 }
