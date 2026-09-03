@@ -2,7 +2,7 @@ module github.com/aaronriekenberg/httpcat
 
 go 1.26.5
 
-require github.com/quic-go/quic-go v0.61.0
+require github.com/quic-go/quic-go v0.62.0
 
 require (
 	github.com/quic-go/qpack v0.6.0 // indirect
