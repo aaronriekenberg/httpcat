@@ -90,7 +90,7 @@ func TestBodySourceLargeFile(t *testing.T) {
 	defer os.Remove(tmpFile.Name())
 
 	chunk := make([]byte, 1024*1024) // 1MB
-	for i := 0; i < 5; i++ {         // 5MB total
+	for range 5 {                    // 5MB total
 		tmpFile.Write(chunk)
 	}
 	tmpFile.Close()
@@ -263,7 +263,7 @@ func TestFileSeekingMultipleReads(t *testing.T) {
 	bs, _ := client.NewBodySource("@" + tmpFile.Name())
 	defer bs.Close()
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		reader, err := bs.GetReader()
 		if err != nil {
 			t.Fatalf("attempt %d: %v", i, err)

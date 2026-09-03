@@ -51,18 +51,18 @@ func newRequest(opts *cli.Options, bs *bodySource) (*http.Request, error) {
 
 // applyHeader parses and sets a single header.
 func applyHeader(req *http.Request, header string) error {
-	idx := strings.IndexByte(header, ':')
-	if idx < 0 {
+	before, after, ok := strings.Cut(header, ":")
+	if !ok {
 		return fmt.Errorf("invalid header %q: missing colon", header)
 	}
 
-	key := header[:idx]
+	key := before
 	if key == "" {
 		return fmt.Errorf("invalid header %q: empty key", header)
 	}
 
 	// Trim leading space from value
-	value := strings.TrimLeft(header[idx+1:], " ")
+	value := strings.TrimLeft(after, " ")
 	req.Header.Add(key, value)
 	return nil
 }

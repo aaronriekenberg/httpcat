@@ -109,7 +109,7 @@ func TestPrintRequestLinePrefix(t *testing.T) {
 	var b strings.Builder
 	verbose.PrintRequest(&b, req)
 
-	for _, line := range strings.Split(strings.TrimRight(b.String(), "\r\n"), "\r\n") {
+	for line := range strings.SplitSeq(strings.TrimRight(b.String(), "\r\n"), "\r\n") {
 		if line == "" {
 			continue
 		}
@@ -206,7 +206,7 @@ func TestPrintResponseLinePrefix(t *testing.T) {
 	var b strings.Builder
 	verbose.PrintResponse(&b, resp)
 
-	for _, line := range strings.Split(strings.TrimRight(b.String(), "\r\n"), "\r\n") {
+	for line := range strings.SplitSeq(strings.TrimRight(b.String(), "\r\n"), "\r\n") {
 		if line == "" {
 			continue
 		}

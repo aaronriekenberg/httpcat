@@ -164,7 +164,7 @@ func TestLargeBody(t *testing.T) {
 	const size = 1 << 20 // 1 MiB
 	srv := startServer(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", size))
-		for i := 0; i < size; i++ {
+		for range size {
 			w.Write([]byte{'x'}) //nolint:errcheck
 		}
 	})
